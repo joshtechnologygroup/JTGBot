@@ -1,0 +1,2 @@
+class FulfillmentController < ApplicationController
+end
