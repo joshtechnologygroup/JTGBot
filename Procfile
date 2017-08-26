@@ -1,1 +1,1 @@
-web: newrelic-admin run-program uwsgi --ini wsgi.ini --http-socket :$PORT
+web: run-program uwsgi --ini wsgi.ini
