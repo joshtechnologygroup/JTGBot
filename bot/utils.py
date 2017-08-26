@@ -1,29 +1,16 @@
+import datetime
+import hashlib
 import json
 import os
 import re
-import datetime
 
 import apiai
-import httplib2
-import hashlib
-
-# Create your views here.
-from django.conf import settings
-from rest_framework.response import Response
-from rest_framework.views import APIView
-
-from apiclient import discovery
-
 import gspread
+from django.conf import settings
 from oauth2client.service_account import ServiceAccountCredentials
 
 
 def call_bot_api(query, email, json_key='query'):
-    """
-    :param query:
-    :param email:
-    :return:
-    """
     ai = apiai.ApiAI(settings.CLIENT_ACCESS_TOKEN)
     request = ai.text_request()
     request.lang = 'en'
@@ -77,23 +64,22 @@ def get_remaining_leaves_for_user(identity, vaction_type):
 
 
 def get_team_status(team_name, date):
-    print get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8")
     vaction_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
         'Vacation Tracker'
     )
     column_date = datetime.datetime.strptime(date, '%Y-%m-%d')
+    requested_date = int(column_date.strftime('%d'))
     column_name = column_date.strftime('%B - %Y')
     header_row = vaction_sheet.row_values(1)
     column_index = header_row.index(column_name)
-    # print leaves_sheet.row_values(2)[52]
+    name_index = header_row.index('Name')
     cells = vaction_sheet.findall(re.compile(r'(Small|{})'.format(team_name)))
-    result = []
+    result = {}
     for cell in cells:
         row = vaction_sheet.row_values(cell.row)
         for i in range(0, 5):
-            for string in row[column_index + 1].split(','):
-                dates = string.split('(')[0].strip()
-                if date in [int(date) for date in dates if date.isdigit()]:
-                    result.append(date)
-                    break
+            dates = [string.split('(')[0].strip() for string in row[column_index + i].split(',')]
+            if requested_date in [int(date) for date in dates if date.isdigit()]:
+                result.update({row[name_index]: vaction_sheet.row_values(2)[column_index + i]})
+                break
     return result

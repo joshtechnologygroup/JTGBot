@@ -1,10 +1,5 @@
-import json
-import os
-
-import apiai
-import httplib2
-
 # Create your views here.
+from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -40,3 +35,18 @@ class BotApi(APIView):
         else:
             response = api_response['result']['fulfillment']['speech']
         return Response(response)
+
+
+class SlackBotVerificationApi(BotApi):
+    authentication_classes = []
+
+    def post(self, *args, **kwargs):
+        token = self.request.data.get('token')
+        response = None
+        if token == settings.SLACK_TOKEN:
+            challenge = self.request.data.get('challenge', '')
+            if challenge:
+                response = Response(challenge)
+            else:
+                response = super(SlackBotVerificationApi, self).post(*args, **kwargs)
+        return response or Response({}, status=401)
