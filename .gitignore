@@ -34,4 +34,5 @@ tags
 # Vim Rope plug in
 *.ropeproject*
 
+*/*.pyc
 *.pyc

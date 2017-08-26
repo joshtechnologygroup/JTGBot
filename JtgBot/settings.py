@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
+from os.path import abspath, basename, dirname, join, normpath
 import os
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -133,5 +134,5 @@ BROKER_URL = os.environ.get('RABBITMQ_URL', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'json'
-
 SLACK_TOKEN = os.environ.get('CLIENT_ACCESS_TOKEN')
+STATIC_ROOT = normpath(join(BASE_DIR, 'static'))
