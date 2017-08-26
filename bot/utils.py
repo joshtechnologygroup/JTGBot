@@ -48,6 +48,7 @@ def get_contact_info_by_name(name, email, response_text=''):
         response = string.replace(response, 'name', name)
     elif len(cells) == 0:
         response = call_bot_event_api(email, 'contact_regret')
+        response = json.loads(response.read())['result']['fulfillment']['speech']
     else:
         result = 'Its seems like too many people share that name. Still, I tried.'
         for cell in cells:
