@@ -51,6 +51,13 @@ class BotApi(APIView):
                             email, parameters['Date_Entity'], parameters['Vacation_Type_Apply'],
                             api_response['result']['fulfillment']['speech']
                         )
+                    elif intent_name == 'Vacation_Query_Person_Status':
+                        parameters = api_response['result']['parameters']
+                        response = bot_utils.get_user_availability(
+                            parameters['JTG_Employee'] or email,
+                            parameters['Date_Entity'],
+                            parameters['Vacation_Status']
+                        )
                     else:
                         response = api_response['result']['fulfillment']['speech']
                 else:
@@ -66,6 +73,7 @@ class MMBotVerificationApi(BotApi):
     def post(self, *args, **kwargs):
         data = self.request.data
         response = None
+        # todo update this
         if True:
             email = json.loads(settings.MM_CONFIG).get(data['user_name'])
             kwargs.update({'email': email, 'query': data.get('text', '')})

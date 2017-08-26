@@ -7,7 +7,9 @@ import string
 
 import apiai
 import gspread
+
 from django.conf import settings
+
 from oauth2client.service_account import ServiceAccountCredentials
 
 from bot.constants import LEAVES_TYPE_INDEX
@@ -50,7 +52,7 @@ def get_contact_info_by_name(name, email, response_text=''):
         response = call_bot_event_api(email, 'contact_regret')
         response = json.loads(response.read())['result']['fulfillment']['speech']
     else:
-        result = 'Its seems like too many people share that name. Still, I tried.'
+        result = "It's seems like too many people share that name. Still, I tried."
         for cell in cells:
             row = contact_sheet.row_values(cell.row)
             result = '{result} {number}({email})'.format(result=result, number=row[number_column], email=row[email_column])
@@ -167,3 +169,50 @@ def process_vacation_date(requested_date_object, vacation_type, header_row):
     column_name = requested_date_object.strftime('%B - %Y')
     column_index = header_row.index(column_name) + LEAVES_TYPE_INDEX.get(vacation_type, 0) + 1
     return column_index, requested_day
+
+
+def get_user_availability(identity, date_data, applied_or_approved='Approved'):
+    if applied_or_approved == 'Approved':
+        vacation_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
+            'Vacation Tracker'
+        )
+    else:
+        vacation_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
+            'Applied Tracker'
+        )
+    column_date = datetime.datetime.strptime(date_data['date'], '%Y-%m-%d')
+    # todo update this
+    if column_date.year >= 2018:
+        return "We don't have information for {}".format(date_data['date'])
+
+    requested_date = int(column_date.strftime('%d'))
+    column_name = column_date.strftime('%B - %Y')
+    header_row = vacation_sheet.row_values(1)
+    column_index = header_row.index(column_name)
+    cells = vacation_sheet.findall(re.compile(r'(Small|{})'.format(identity)))
+    email_column = header_row.index('Email')
+    # todo optimize this
+    if len(cells) == 1:
+        result = 'Yes'
+        row = vacation_sheet.row_values(cells[0].row)
+        for i in range(0, 5):
+            dates = [date_string.split('(')[0].strip() for date_string in row[column_index + i].split(',')]
+            if requested_date in [int(date) for date in dates if date.isdigit()]:
+                result = 'No'
+                break
+    elif len(cells) == 0:
+        return "It's seems like, {} doesn't belong to our organisation".format(identity)
+    else:
+        result = "It's seems like too many people share that name. Still, I tried."
+        for cell in cells:
+            availability = 'Yes'
+            row = vacation_sheet.row_values(cell.row)
+            for i in range(0, 5):
+                dates = [date_string.split('(')[0].strip() for date_string in row[column_index + i].split(',')]
+                if requested_date in [int(date) for date in dates if date.isdigit()]:
+                    availability = 'No'
+                    break
+            result = "{result} {email}({availability}), ".format(
+                email=row[email_column], result=result, availability=availability
+            )
+    return result
