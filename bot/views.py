@@ -37,7 +37,7 @@ class BotApi(APIView):
                         )
                     elif intent_name == 'Vacation_Query_Remaining':
                         parameters = api_response['result']['parameters']
-                        identity = parameters['JTG_Employee'] or data['email']
+                        identity = parameters['JTG_Employee'] or email
                         vaction_type = parameters['Vacation_Type_Remaining']
                         response = bot_utils.get_remaining_leaves_of_user(
                             identity, vaction_type, api_response['result']['fulfillment']['speech']
