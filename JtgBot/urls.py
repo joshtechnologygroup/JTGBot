@@ -17,9 +17,9 @@ Including another URLconf
 from django.conf.urls import url
 from django.contrib import admin
 
-from bot.views import BotApi, SlackBotVerificationApi
+from bot.views import BotApi, MMBotVerificationApi
 
 urlpatterns = [
     url(r'^bot/$', BotApi.as_view()),
-    url(r'^bot/slack/$', SlackBotVerificationApi.as_view())
+    url(r'^bot/mm/$', MMBotVerificationApi.as_view()),
 ]

@@ -135,4 +135,7 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'pickle'
 CELERY_RESULT_SERIALIZER = 'json'
 SLACK_TOKEN = os.environ.get('SLACK_TOKEN')
+MM_TOKEN = os.environ.get('MM_TOKEN')
+BOT_SECRET_TOKEN = os.environ.get('BOT_SECRET_TOKEN')
 STATIC_ROOT = normpath(join(BASE_DIR, 'static'))
+MM_CONFIG = os.environ.get('MM_CONFIG', "{}")
