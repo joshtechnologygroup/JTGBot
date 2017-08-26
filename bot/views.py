@@ -39,13 +39,15 @@ class BotApi(APIView):
                         parameters = api_response['result']['parameters']
                         identity = parameters['JTG_Employee'] or data['email']
                         vaction_type = parameters['Vacation_Type_Remaining']
-                        response = bot_utils.get_remaining_leaves_for_user(identity, vaction_type)
+                        response = bot_utils.get_remaining_leaves_of_user(
+                            identity, vaction_type, api_response['result']['fulfillment']['speech']
+                        )
                     elif intent_name == 'Vacation_Query_Team_Status':
                         parameters = api_response['result']['parameters']
                         response = bot_utils.get_team_status(parameters['JTG_Team'], parameters['date'])
                     elif intent_name == 'Vacation_Apply':
                         parameters = api_response['result']['parameters']
-                        response = bot_utils.apply_vaction(data['email'], parameters['Date_Entity'], parameters['Vacation_Type_Apply'])
+                        response = bot_utils.apply_vacation(data['email'], parameters['Date_Entity'], parameters['Vacation_Type_Apply'])
                     else:
                         response = {}
                 else:

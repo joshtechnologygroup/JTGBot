@@ -58,26 +58,33 @@ def get_contact_info_by_name(name, email, response_text=''):
     return response
 
 
-def get_official_leaves(vaction_type='', date_period=''):
+def get_official_leaves(vacation_type='', date_period=''):
     # todo get info from sheet
-    return ['2017-01-01', '2017-02-01', '2017-03-01', '2017-04-01','2017-05-01', '2017-06-01', '2017-07-01']
+    return '2017-01-01', '2017-02-01', '2017-03-01', '2017-04-01','2017-05-01', '2017-06-01', '2017-07-01'
 
 
 def get_session_id_of_user(email):
     return hashlib.md5(email).hexdigest()
 
 
-def get_remaining_leaves_for_user(identity, vaction_type):
+def get_remaining_leaves_of_user(identity, vacation_type, response_text):
     dashboard_leaves_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet('Dashboard - Leaves')
     header_row = dashboard_leaves_sheet.row_values(1)
     cells = dashboard_leaves_sheet.findall(re.compile(r'(Small|{})'.format(identity)))
-    leave_column = header_row.index('Leave Balance' if vaction_type == "CL" else "RH Availed (Jan '17 till Dec '17")
+    leave_column = header_row.index('Leave Balance' if vacation_type == "CL" else "RH Availed (Jan '17 till Dec '17")
     email_column = header_row.index('Email')
-    result = {}
-    for cell in cells:
-        row = dashboard_leaves_sheet.row_values(cell.row)
-        result.update({row[email_column]: row[leave_column]})
-    return result
+    if len(cells) == 1:
+        response = string.replace(response_text, 'vacation_type', vacation_type)
+        response = string.replace(response, 'count', dashboard_leaves_sheet.row_values(cells[0].row)[leave_column])
+    elif len(cells) == 0:
+        response = "It's seems like, {} doesn't belong to our organisation".format(identity)
+    else:
+        result = "It's seems like too many people share that name. Still, I tried."
+        for cell in cells:
+            row = dashboard_leaves_sheet.row_values(cell.row)
+            result = '{result} {email}({count})'.format(result=result, count=row[leave_column], email=row[email_column])
+        response = result
+    return response
 
 
 def get_team_status(team_name, date):
@@ -91,18 +98,33 @@ def get_team_status(team_name, date):
     column_index = header_row.index(column_name)
     name_index = header_row.index('Name')
     cells = vacation.findall(re.compile(r'(Small|{})'.format(team_name)))
-    result = {}
+    result = ''
     for cell in cells:
         row = vacation.row_values(cell.row)
         for i in range(0, 5):
-            dates = [string.split('(')[0].strip() for string in row[column_index + i].split(',')]
+            dates = [date_string.split('(')[0].strip() for date_string in row[column_index + i].split(',')]
             if requested_date in [int(date) for date in dates if date.isdigit()]:
-                result.update({row[name_index]: vacation.row_values(2)[column_index + i]})
+                result = '{result} {name} {vaction_type}, '.format(
+                    result=result, name=row[name_index], vaction_type=vacation.row_values(2)[column_index + i]
+                )
                 break
+    if result:
+        if column_date.date() > datetime.date.today():
+            helping_verb = 'wil be'
+        else:
+            helping_verb = 'is'
+        result = string.replace(result, 'Leaves', '{} on leave'.format(helping_verb))
+        result = string.replace(result, 'WFH', '{} working from home'.format(helping_verb))
+        result = string.replace(result, 'RH', '{} on leave'.format(helping_verb))
+        result = string.replace(result, 'Half Days', '{} on half day'.format(helping_verb))
+    elif len(cells) == 0:
+        result = "It's seems like, {} team doesn't belongs to our organisation".format(team_name)
+    else:
+        result = 'Good news for you, everyone is available'
     return result
 
 
-def apply_vaction(email, data_list, vacation_type):
+def apply_vacation(email, data_list, vacation_type):
     vacation_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
         'Applied Tracker'
     )
@@ -114,23 +136,22 @@ def apply_vaction(email, data_list, vacation_type):
         date = data.get('date')
         date_period = data.get('date-period')
         if date:
-            column_index, requested_day = process_vaction_date(date, vacation_type, header_row)
+            column_index, requested_day = process_vacation_date(date, vacation_type, header_row)
             applied_leaves_data.setdefault(column_index, []).append(requested_day)
         if date_period:
             for date in date_period.split('/'):
-                column_index, requested_day = process_vaction_date(date, vacation_type, header_row)
+                column_index, requested_day = process_vacation_date(date, vacation_type, header_row)
                 applied_leaves_data.setdefault(column_index, []).append(requested_day)
-    print applied_leaves_data
     cells_list = []
-    for vaction_column, leaves_list in applied_leaves_data.items():
-        cell = vacation_sheet.cell(user_row, vaction_column)
+    for vacation_column, leaves_list in applied_leaves_data.items():
+        cell = vacation_sheet.cell(user_row, vacation_column)
         cell.value = ','.join(str(day) for day in set(cell.value.split(',') + leaves_list))
         cells_list.append(cell)
     vacation_sheet.update_cells(cells_list)
     return 'Done'
 
 
-def process_vaction_date(date, vacation_type, header_row):
+def process_vacation_date(date, vacation_type, header_row):
     requested_date_object = datetime.datetime.strptime(date, '%Y-%m-%d')
     requested_day = requested_date_object.strftime('%d')
     column_name = requested_date_object.strftime('%B - %Y')
