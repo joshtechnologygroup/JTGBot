@@ -20,7 +20,7 @@ class BotApi(APIView):
         if email and query:
             api_response = bot_utils.call_bot_api(query, email)
             response = 'Time to learn something new'
-            if api_response['status']['code'] == 200:
+            if api_response['status']['code'] in range(200, 220):
                 if not api_response['result']['actionIncomplete']:
                     intent_name = api_response['result']['metadata']['intentName']
                     if intent_name == 'Contact_Request_Get_By_Name':
