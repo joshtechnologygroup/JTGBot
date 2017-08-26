@@ -22,7 +22,7 @@ class BotApi(APIView):
             response = 'Time to learn something new'
             if api_response['status']['code'] in range(200, 220):
                 if not api_response['result']['actionIncomplete']:
-                    intent_name = api_response['result']['metadata']['intentName']
+                    intent_name = api_response['result']['metadata'].get('intentName', '')
                     if intent_name == 'Contact_Request_Get_By_Name':
                         response = bot_utils.get_contact_info_by_name(
                             api_response['result']['parameters']['JTG_Employee'],
@@ -49,7 +49,7 @@ class BotApi(APIView):
                         parameters = api_response['result']['parameters']
                         response = bot_utils.apply_vacation(data['email'], parameters['Date_Entity'], parameters['Vacation_Type_Apply'])
                     else:
-                        response = {}
+                        response = api_response['result']['fulfillment']['speech']
                 else:
                     response = api_response['result']['fulfillment']['speech']
         else:
