@@ -60,7 +60,7 @@ def get_contact_info_by_name(name, email, response_text=''):
 
 def get_official_leaves(vacation_type='', date_period=''):
     # todo get info from sheet
-    return '2017-01-01', '2017-02-01', '2017-03-01', '2017-04-01','2017-05-01', '2017-06-01', '2017-07-01'
+    return 'Available vacations are 2 August 2017, 9 August 2017, 17 August 2017, 20 August 2017, 22 August 2017, 27 August 2017'
 
 
 def get_session_id_of_user(email):
@@ -92,6 +92,9 @@ def get_team_status(team_name, date):
         'Vacation Tracker'
     )
     column_date = datetime.datetime.strptime(date, '%Y-%m-%d')
+    # todo update this
+    if column_date.year >= 2018:
+        return "We don't have information for {}".format(date)
     requested_date = int(column_date.strftime('%d'))
     column_name = column_date.strftime('%B - %Y')
     header_row = vacation.row_values(1)
@@ -124,7 +127,7 @@ def get_team_status(team_name, date):
     return result
 
 
-def apply_vacation(email, data_list, vacation_type):
+def apply_vacation(email, data_list, vacation_type, response_text):
     vacation_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
         'Applied Tracker'
     )
@@ -136,11 +139,19 @@ def apply_vacation(email, data_list, vacation_type):
         date = data.get('date')
         date_period = data.get('date-period')
         if date:
-            column_index, requested_day = process_vacation_date(date, vacation_type, header_row)
+            requested_date_object = datetime.datetime.strptime(date, '%Y-%m-%d')
+            # todo update this
+            if requested_date_object.year >= 2018:
+                return "Currently, you can't apply vacations for {}".format(2018)
+            column_index, requested_day = process_vacation_date(requested_date_object, vacation_type, header_row)
             applied_leaves_data.setdefault(column_index, []).append(requested_day)
         if date_period:
             for date in date_period.split('/'):
-                column_index, requested_day = process_vacation_date(date, vacation_type, header_row)
+                requested_date_object = datetime.datetime.strptime(date, '%Y-%m-%d')
+                # todo update this
+                if requested_date_object.year >= 2018:
+                    return "Currently, you can't apply vacations for {}".format(2018)
+                column_index, requested_day = process_vacation_date(requested_date_object, vacation_type, header_row)
                 applied_leaves_data.setdefault(column_index, []).append(requested_day)
     cells_list = []
     for vacation_column, leaves_list in applied_leaves_data.items():
@@ -148,11 +159,10 @@ def apply_vacation(email, data_list, vacation_type):
         cell.value = ','.join(str(day) for day in set(cell.value.split(',') + leaves_list))
         cells_list.append(cell)
     vacation_sheet.update_cells(cells_list)
-    return 'Done'
+    return response_text
 
 
-def process_vacation_date(date, vacation_type, header_row):
-    requested_date_object = datetime.datetime.strptime(date, '%Y-%m-%d')
+def process_vacation_date(requested_date_object, vacation_type, header_row):
     requested_day = requested_date_object.strftime('%d')
     column_name = requested_date_object.strftime('%B - %Y')
     column_index = header_row.index(column_name) + LEAVES_TYPE_INDEX.get(vacation_type, 0) + 1

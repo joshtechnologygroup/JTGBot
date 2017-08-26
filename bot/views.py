@@ -47,7 +47,10 @@ class BotApi(APIView):
                         response = bot_utils.get_team_status(parameters['JTG_Team'], parameters['date'])
                     elif intent_name == 'Vacation_Apply':
                         parameters = api_response['result']['parameters']
-                        response = bot_utils.apply_vacation(data['email'], parameters['Date_Entity'], parameters['Vacation_Type_Apply'])
+                        response = bot_utils.apply_vacation(
+                            email, parameters['Date_Entity'], parameters['Vacation_Type_Apply'],
+                            api_response['result']['fulfillment']['speech']
+                        )
                     else:
                         response = api_response['result']['fulfillment']['speech']
                 else:
