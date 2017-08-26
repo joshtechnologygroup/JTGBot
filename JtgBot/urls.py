@@ -21,5 +21,5 @@ from bot.views import BotApi, SlackBotVerificationApi
 
 urlpatterns = [
     url(r'^bot/$', BotApi.as_view()),
-    url(r'^bot/slack$', SlackBotVerificationApi.as_view())
+    url(r'^bot/slack/$', SlackBotVerificationApi.as_view())
 ]
