@@ -171,8 +171,8 @@ def process_vacation_date(requested_date_object, vacation_type, header_row):
     return column_index, requested_day
 
 
-def get_user_availability(identity, date_data, applied_or_approved='Approved'):
-    if applied_or_approved == 'Approved':
+def get_user_availability(identity, date_data, available_or_applied='Available'):
+    if available_or_applied == 'Available':
         vacation_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
             'Vacation Tracker'
         )
@@ -193,24 +193,25 @@ def get_user_availability(identity, date_data, applied_or_approved='Approved'):
     email_column = header_row.index('Email')
     # todo optimize this
     if len(cells) == 1:
-        result = 'Yes'
+        result = 'Yes' if available_or_applied == 'Available' else 'No'
         row = vacation_sheet.row_values(cells[0].row)
         for i in range(0, 5):
             dates = [date_string.split('(')[0].strip() for date_string in row[column_index + i].split(',')]
+            print requested_date, [int(date) for date in dates if date.isdigit()]
             if requested_date in [int(date) for date in dates if date.isdigit()]:
-                result = 'No'
+                result = 'No' if available_or_applied == 'Available' else 'Yes'
                 break
     elif len(cells) == 0:
         return "It's seems like, {} doesn't belong to our organisation".format(identity)
     else:
         result = "It's seems like too many people share that name. Still, I tried."
         for cell in cells:
-            availability = 'Yes'
+            availability = 'Yes' if available_or_applied == 'Available' else 'No'
             row = vacation_sheet.row_values(cell.row)
             for i in range(0, 5):
                 dates = [date_string.split('(')[0].strip() for date_string in row[column_index + i].split(',')]
                 if requested_date in [int(date) for date in dates if date.isdigit()]:
-                    availability = 'No'
+                    availability = 'No' if available_or_applied == 'Available' else 'Yes'
                     break
             result = "{result} {email}({availability}), ".format(
                 email=row[email_column], result=result, availability=availability
