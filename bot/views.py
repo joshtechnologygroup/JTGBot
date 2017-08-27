@@ -73,8 +73,7 @@ class MMBotVerificationApi(BotApi):
     def post(self, *args, **kwargs):
         data = self.request.data
         response = None
-        # todo update this
-        if True:
+        if data.get('token') == settings.MM_TOKEN:
             email = json.loads(settings.MM_CONFIG).get(data['user_name'])
             kwargs.update({'email': email, 'query': data.get('text', '')})
             response = super(MMBotVerificationApi, self).post(*args, **kwargs)

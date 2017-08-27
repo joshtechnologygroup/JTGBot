@@ -13,10 +13,8 @@ class BoTAuthentication(authentication.BaseAuthentication):
         # Get the client secret key from the request
         request_client_secret_key = request.META.get('HTTP_BOT_SECRET_TOKEN')
         # Authorize if the key is in known keys.
-        if request_client_secret_key in settings.BOT_SECRET_TOKEN:
-            # The authenticate function returns a tuple (user, None) as we can not check whether the user exists
-            # in the system, returns None in place of user
+        if request_client_secret_key == settings.BOT_SECRET_TOKEN:
             return None, None
         else:
-            # raise exception if Client secret key does not match
+            # raise exception if Client bot key does not match
             raise exceptions.AuthenticationFailed('Incorrect Bot Key')
