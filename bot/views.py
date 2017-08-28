@@ -55,7 +55,7 @@ class BotApi(APIView):
                         parameters = api_response['result']['parameters']
                         response = bot_utils.get_user_availability(
                             parameters['JTG_Employee'] or email,
-                            parameters['Date_Entity'],
+                            parameters['date'],
                             parameters['Vacation_Status']
                         )
                     else:

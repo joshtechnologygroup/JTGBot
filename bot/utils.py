@@ -171,7 +171,7 @@ def process_vacation_date(requested_date_object, vacation_type, header_row):
     return column_index, requested_day
 
 
-def get_user_availability(identity, date_data, available_or_applied='Available'):
+def get_user_availability(identity, date, available_or_applied='Available'):
     if available_or_applied == 'Available':
         vacation_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
             'Vacation Tracker'
@@ -180,10 +180,10 @@ def get_user_availability(identity, date_data, available_or_applied='Available')
         vacation_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
             'Applied Tracker'
         )
-    column_date = datetime.datetime.strptime(date_data['date'], '%Y-%m-%d')
+    column_date = datetime.datetime.strptime(date, '%Y-%m-%d')
     # todo update this
     if column_date.year >= 2018:
-        return "We don't have information for {}".format(date_data['date'])
+        return "We don't have information for {}".format(date)
 
     requested_date = int(column_date.strftime('%d'))
     column_name = column_date.strftime('%B - %Y')
@@ -197,7 +197,6 @@ def get_user_availability(identity, date_data, available_or_applied='Available')
         row = vacation_sheet.row_values(cells[0].row)
         for i in range(0, 5):
             dates = [date_string.split('(')[0].strip() for date_string in row[column_index + i].split(',')]
-            print requested_date, [int(date) for date in dates if date.isdigit()]
             if requested_date in [int(date) for date in dates if date.isdigit()]:
                 result = 'No' if available_or_applied == 'Available' else 'Yes'
                 break
