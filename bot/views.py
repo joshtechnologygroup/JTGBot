@@ -24,18 +24,20 @@ class BotApi(APIView):
             api_response = bot_utils.call_bot_api(query, email)
             response = 'Time to learn something new'
             if api_response['status']['code'] in range(200, 220):
+                intent_name = 'default'
+                kwargs = {
+                    'parameters': api_response['result'].get('parameters', {}),
+                    'email': email,
+                    'query': query,
+                    'response_text': api_response['result']['fulfillment']['speech'],
+                    'api_response': api_response
+                }
                 if not api_response['result']['actionIncomplete']:
                     intent_name = api_response['result']['metadata'].get('intentName', '')
-                    kwargs = {
-                        'parameters': api_response['result']['parameters'],
-                        'email': email,
-                        'query': query,
-                        'response_text': api_response['result']['fulfillment']['speech'],
-                        'api_response': api_response
-                    }
-                    response = bot_constants.INTENT_RESPONSE_MAPPING.get(intent_name,bot_constants.INTENT_RESPONSE_MAPPING['default'])(**kwargs)
-                else:
-                    response = api_response['result']['fulfillment']['speech']
+                response = bot_constants.INTENT_RESPONSE_MAPPING.get(
+                    intent_name,
+                    bot_constants.INTENT_RESPONSE_MAPPING['default']
+                )(**kwargs)
         else:
             return Response({}, 400)
         return Response(response)
