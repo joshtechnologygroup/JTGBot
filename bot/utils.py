@@ -39,7 +39,8 @@ def get_sheet_by_id(sheet_id):
     return gc.open_by_key(sheet_id)
 
 
-def get_contact_info_by_name(name, email, response_text=''):
+def get_contact_info_by_name(email, response_text='', parameters={}, **kwargs):
+    name = parameters.get('JTG_Employee')
     contact_sheet = get_sheet_by_id("1QHPyjulCMQD9K5wqHHth1mTs1lm-LcDcuIwX_UIGlas").worksheet('Contacts')
     header_row = contact_sheet.row_values(1)
     email_column = header_row.index('Josh ID')
@@ -60,7 +61,9 @@ def get_contact_info_by_name(name, email, response_text=''):
     return response
 
 
-def get_official_leaves(vacation_type='', date_period=''):
+def get_official_leaves(parameters={}, **kwargs):
+    vacation_type = parameters.get('Vacation_Type_Available', '')
+    date_period = parameters.get('date-period', '')
     # todo get info from sheet
     return 'Available vacations are 2 August 2017, 9 August 2017, 17 August 2017, 20 August 2017, 22 August 2017, 27 August 2017'
 
@@ -69,7 +72,9 @@ def get_session_id_of_user(email):
     return hashlib.md5(email).hexdigest()
 
 
-def get_remaining_leaves_of_user(identity, vacation_type, response_text):
+def get_remaining_leaves_of_user(response_text, email, parameters={}, **kwargs):
+    identity = parameters.get('JTG_Employee', email)
+    vacation_type = parameters.get('Vacation_Type_Remaining', '')
     dashboard_leaves_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet('Dashboard - Leaves')
     header_row = dashboard_leaves_sheet.row_values(1)
     cells = dashboard_leaves_sheet.findall(re.compile(r'(Small|{})'.format(identity)))
@@ -89,7 +94,8 @@ def get_remaining_leaves_of_user(identity, vacation_type, response_text):
     return response
 
 
-def get_team_status(team_name, date):
+def get_team_status(parameters={}, **kwargs):
+    team_name, date = parameters['JTG_Team'], parameters['date']
     vacation = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
         'Vacation Tracker'
     )
@@ -129,7 +135,8 @@ def get_team_status(team_name, date):
     return result
 
 
-def apply_vacation(email, data_list, vacation_type, response_text):
+def apply_vacation(email, parameters={}, response_text='', **kwargs):
+    data_list, vacation_type = parameters['Date_Entity'], parameters['Vacation_Type_Apply']
     vacation_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
         'Applied Tracker'
     )
@@ -171,7 +178,8 @@ def process_vacation_date(requested_date_object, vacation_type, header_row):
     return column_index, requested_day
 
 
-def get_user_availability(identity, date, available_or_applied='Available'):
+def get_user_availability(email, parameters={}, **kwargs):
+    identity, date, available_or_applied = parameters['JTG_Employee'] or email, parameters['date'], parameters['Vacation_Status'] or 'Available'
     if available_or_applied == 'Available':
         vacation_sheet = get_sheet_by_id("10rG0t-XhOSzGbbqls18gTlnksavBQTKxxdT8e1MZJn8").worksheet(
             'Vacation Tracker'
