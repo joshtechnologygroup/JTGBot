@@ -6,7 +6,10 @@ from django.conf import settings
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from bot import utils as bot_utils
+from bot import (
+    constants as bot_constants,
+    utils as bot_utils,
+)
 from bot.authentications import BoTAuthentication
 
 
@@ -23,43 +26,14 @@ class BotApi(APIView):
             if api_response['status']['code'] in range(200, 220):
                 if not api_response['result']['actionIncomplete']:
                     intent_name = api_response['result']['metadata'].get('intentName', '')
-                    if intent_name == 'Contact_Request_Get_By_Name':
-                        response = bot_utils.get_contact_info_by_name(
-                            api_response['result']['parameters']['JTG_Employee'],
-                            email,
-                            api_response['result']['fulfillment']['speech']
-                        )
-                    elif intent_name == 'Vacation_Query_Available':
-                        parameters = api_response['result']['parameters']
-                        response = bot_utils.get_official_leaves(
-                            parameters['Vacation_Type_Available'],
-                            parameters['date-period'],
-                        )
-                    elif intent_name == 'Vacation_Query_Remaining':
-                        parameters = api_response['result']['parameters']
-                        identity = parameters['JTG_Employee'] or email
-                        vaction_type = parameters['Vacation_Type_Remaining']
-                        response = bot_utils.get_remaining_leaves_of_user(
-                            identity, vaction_type, api_response['result']['fulfillment']['speech']
-                        )
-                    elif intent_name == 'Vacation_Query_Team_Status':
-                        parameters = api_response['result']['parameters']
-                        response = bot_utils.get_team_status(parameters['JTG_Team'], parameters['date'])
-                    elif intent_name == 'Vacation_Apply':
-                        parameters = api_response['result']['parameters']
-                        response = bot_utils.apply_vacation(
-                            email, parameters['Date_Entity'], parameters['Vacation_Type_Apply'],
-                            api_response['result']['fulfillment']['speech']
-                        )
-                    elif intent_name == 'Vacation_Query_Person_Status':
-                        parameters = api_response['result']['parameters']
-                        response = bot_utils.get_user_availability(
-                            parameters['JTG_Employee'] or email,
-                            parameters['date'],
-                            parameters['Vacation_Status']
-                        )
-                    else:
-                        response = api_response['result']['fulfillment']['speech']
+                    kwargs = {
+                        'parameters': api_response['result']['parameters'],
+                        'email': email,
+                        'query': query,
+                        'response_text': api_response['result']['fulfillment']['speech'],
+                        'api_response': api_response
+                    }
+                    response = bot_constants.INTENT_RESPONSE_MAPPING.get(intent_name,bot_constants.INTENT_RESPONSE_MAPPING['default'])(**kwargs)
                 else:
                     response = api_response['result']['fulfillment']['speech']
         else:
