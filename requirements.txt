@@ -25,7 +25,7 @@ django-configurations==0.8
 django-environ==0.4.3
 django-filter==1.0.4
 django-filters==0.2.1
-djangorestframework==3.6.3
+djangorestframework==3.9.1
 docutils==0.14
 enum34==1.1.6
 google-api-python-client==1.6.2
