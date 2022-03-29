@@ -36,7 +36,7 @@ ipaddress==1.0.18
 kombu==4.1.0
 numpy==1.13.1
 oauth2client==4.1.2
-paramiko==2.2.1
+paramiko==2.10.1
 psycopg2==2.5.4
 pyasn1==0.3.2
 pyasn1-modules==0.0.11
